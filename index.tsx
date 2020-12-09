@@ -1,1 +1,1 @@
-export * as useForm from './src/hooks/useForm';
+module.exports = require('./src/hooks/useForm');
