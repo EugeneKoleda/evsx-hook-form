@@ -1,13 +1,9 @@
-import React, { SyntheticEvent, useMemo, useState } from 'react';
+import React, { useState } from 'react';
 
 type ValueType = string | number | boolean | [] | null; 
 
 type ValuesType = {
     [key: string]: ValueType;
-};
-
-type StateMapType = {
-    [key: string]: [ValueType, React.Dispatch<React.SetStateAction<ValueType>>]
 };
 
 interface IFieldProps {
@@ -31,7 +27,7 @@ interface IProps {
 
 interface IForm {
     values: null | ValuesType;
-    onSubmit: (e: SyntheticEvent<HTMLFormElement>) => void;
+    onSubmit: (e: React.SyntheticEvent<HTMLFormElement>) => void;
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     setFieldValue: (name: string, value: ValueType) => void;
     useField: (fieldProps: IFieldProps) => JSX.Element | ((props: any) => JSX.Element) | void;
@@ -41,37 +37,18 @@ interface IForm {
 
 let useForm = (props: IProps) => {
     let { initialValues, onSubmit } = props;
+
+    let [values, setValues] = useState(initialValues);
+
     let form: IForm = {
-        values: null,
+        values,
         onSubmit: () => {},
         onChange: () => {},
         setFieldValue: () => {},
         useField: () => {},
     };
 
-    let stateMap = useMemo(() => 
-        Object.keys(initialValues).reduce((result: StateMapType, key: string): StateMapType => {
-            let initialValue = initialValues[key];
-
-            result[key] = useState(initialValue);
-
-            return result;
-        }, {}), 
-        [initialValues]
-    ); 
-
-    form.values = useMemo(() => 
-        Object.keys(stateMap).reduce((result: ValuesType, key: string): ValuesType => {
-            let [value] = stateMap[key];
-
-            result[key] = value;
-
-            return result;
-        }, {}), 
-        [stateMap]
-    );
-
-    form.onSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
+    form.onSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         if(form.values) {
@@ -79,11 +56,7 @@ let useForm = (props: IProps) => {
         }
     };
 
-    form.setFieldValue = (name: string, value: ValueType) => {
-        let [, setValue] = stateMap[name];
-
-        setValue(value);
-    };
+    form.setFieldValue = (name: string, value: ValueType) => setValues({ ...values, [name]: value })
 
     form.onChange = (e: React.ChangeEvent<HTMLInputElement>) => { 
         let name = e.target.name;
@@ -97,7 +70,7 @@ let useForm = (props: IProps) => {
         let  { Component, ...commonProps } = fieldProps;
 
         let internalProps: IInternalProps = { ...commonProps, onChange: form.onChange };
-        let [fieldValue] = stateMap[internalProps.name];
+        let fieldValue = values[internalProps.name];
 
         if (internalProps.type === 'checkbox') {
             internalProps.checked = fieldValue;
