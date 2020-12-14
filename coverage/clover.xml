@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1607954305601" clover="3.2.0">
-  <project timestamp="1607954305601" name="All files">
+<coverage generated="1607954811588" clover="3.2.0">
+  <project timestamp="1607954811589" name="All files">
     <metrics statements="28" coveredstatements="28" conditionals="8" coveredconditionals="6" methods="11" coveredmethods="7" elements="47" coveredelements="41" complexity="0" loc="28" ncloc="28" packages="1" files="1" classes="1"/>
     <file name="useForm.tsx" path="/Users/yauheni/evsx-hook-form/src/hooks/useForm.tsx">
       <metrics statements="28" coveredstatements="28" conditionals="8" coveredconditionals="6" methods="11" coveredmethods="7"/>
