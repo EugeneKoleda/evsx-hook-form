@@ -9,12 +9,15 @@ type ValuesType = {
 interface IFieldProps {
     name: string;
     type: string;
-    Component?: () => JSX.Element;
     id?: string;
     className?: string;
 };
 
-interface IInternalProps extends IFieldProps {
+interface IUseFieldProps extends IFieldProps {
+    component?: React.ElementType;
+}
+
+interface IInternalProps extends IUseFieldProps {
     checked?: ValueType;
     value?: ValueType;
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -30,10 +33,8 @@ interface IForm {
     onSubmit: (e: React.SyntheticEvent<HTMLFormElement>) => void;
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     setFieldValue: (name: string, value: ValueType) => void;
-    useField: (fieldProps: IFieldProps) => JSX.Element | ((props: any) => JSX.Element) | void;
+    useField: (fieldProps: IFieldProps) => ((props: any) => JSX.Element) | void;
 };
-
-
 
 let useForm = (props: IProps) => {
     let { initialValues, onSubmit } = props;
@@ -66,8 +67,8 @@ let useForm = (props: IProps) => {
         form.setFieldValue(name, value);
     };
 
-    form.useField = (fieldProps: IFieldProps) => {
-        let  { Component, ...commonProps } = fieldProps;
+    form.useField = (fieldProps: IUseFieldProps) => {
+        let  { component, ...commonProps } = fieldProps;
 
         let internalProps: IInternalProps = { ...commonProps, onChange: form.onChange };
         let fieldValue = values[internalProps.name];
@@ -78,8 +79,10 @@ let useForm = (props: IProps) => {
             internalProps.value = fieldValue;
         }
 
-        if (Component) {
-            return <Component />;
+        if (component) {
+            let Component: React.ElementType = component;
+
+            return (props: any): JSX.Element => (<Component {...internalProps} {...props} />);
         }
 
         return (props: any): JSX.Element => (<input {...internalProps} {...props} />);
