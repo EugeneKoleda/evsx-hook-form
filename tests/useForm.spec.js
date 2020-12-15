@@ -1,40 +1,18 @@
-import { mount } from 'enzyme';
 import React from 'react';
+import _ from 'lodash';
+import { mount } from 'enzyme';
 
-import useForm from '../lib/hooks/useForm';
+import { TestComponent, TestVars } from './seeds/useForm.seed';
 
-let TestComponent = (props) => {
-    let { hookProps } = props;
-
-    if(!hookProps.initialValues || !hookProps.onSubmit) {
-        return null;
-    }
-
-    let form = useForm(hookProps);
-
-    return (
-        <form onSubmit={form.onSubmit}>
-            <input type="text" name="name" value={form.values.name} onChange={form.onChange} />
-            <input type="number" name="age" value={form.values.age} onChange={form.onChange} />
-            <input type="checkbox" name="isAgree" checked={form.values.isAgree} onChange={form.onChange} />
-        </form>
-    );
-};
-
-let hookProps = {
+const DEFAULT_PROPS = {
     initialValues: { name: 'Test', age: 20, isAgree: true },
     onSubmit: (values) => console.log(`Values: ${values.name}, ${values.age}, ${values.isAgree}`),
 };
 
-let TestVars = (props) => {
-    let form = useForm(props.hookProps);
-
-    return <div {...form} />;
-};
 
 describe('Test useForm props', () => {
     it('Test useForm props correct', () => {
-        let testWrapper = mount(<TestComponent hookProps={hookProps} />);
+        let testWrapper = mount(<TestComponent hookProps={DEFAULT_PROPS} />);
 
         expect(testWrapper.props().hookProps.initialValues).toBeDefined();
         expect(testWrapper.props().hookProps.initialValues).toHaveProperty('name', 'Test');
@@ -46,18 +24,20 @@ describe('Test useForm props', () => {
     });
 
     it('Test useForm props empty', () => {
-        let props = {};
+        let props = {
+            ...DEFAULT_PROPS,
+            initialValues: undefined
+        };
 
         let testWrapper = mount(<TestComponent hookProps={props} />);
 
         expect(testWrapper.props().hookProps.initialValues).toBeUndefined();
-        expect(testWrapper.props().hookProps.onSubmit).toBeUndefined();
     });
 });
 
 describe('Test useForm', () => {
     it('Check useForm result', () => {        
-        let container = shallow(<TestVars hookProps={hookProps} />);
+        let container = shallow(<TestVars  hookProps={DEFAULT_PROPS}/>);
 
         expect(container.prop('values')).toBeDefined();
         expect(container.prop('values')).toHaveProperty('name', 'Test');
@@ -78,52 +58,52 @@ describe('Test useForm', () => {
     });
 
     it('Check useForm methods', () => {
-        let container = shallow(<TestVars hookProps={hookProps} />);
+        let container = shallow(<TestVars hookProps={DEFAULT_PROPS} />);
 
         container.prop('setFieldValue')('name', 'TestName');
         expect(container.prop('values')).toHaveProperty('name', 'TestName');
     });
 
     it('Check events', () => {
-        let container = mount(<TestComponent hookProps={hookProps} />);
+        let container = mount(<TestComponent hookProps={DEFAULT_PROPS} />);
 
         let form = container.find('form');
         form.simulate('submit');
 
-        container.find('input[type="text"]').simulate('change', {
+        container.find('input[name="name"]').simulate('change', {
             target: {
                 value: 'TestName',
                 name: 'name',
             }
         });
-        container.find('input[type="number"]').simulate('change', {
+        container.find('input[name="age"]').simulate('change', {
             target: {
                 value: 100,
                 name: 'age',
             }
         });
-        container.find('input[type="checkbox"]').simulate('change', {
+        container.find('input[name="isAgree"]').simulate('change', {
             target: {
                 value: false,
                 name: 'isAgree',
             }
         });
 
-        expect(container.find('input[type="text"]').prop('value')).toEqual('TestName');
-        expect(container.find('input[type="number"]').prop('value')).toEqual(100);
-        expect(container.find('input[type="checkbox"]').prop('checked')).toEqual(false);
+        expect(container.find('input[name="name"]').prop('value')).toEqual('TestName');
+        expect(container.find('input[name="age"]').prop('value')).toEqual(100);
+        expect(container.find('input[name="isAgree"]').prop('checked')).toEqual(false);
     });
 });
 
 describe('Check useField', () => {
     let initialValues = { 
-        ...hookProps.initialValues,
+        ...DEFAULT_PROPS.initialValues,
         lastName: 'TestLast',
         isSubscribed: true,
         city: 'TestCity',
     };
 
-    let container = shallow(<TestVars hookProps={{ ...hookProps, initialValues }} />);
+    let container = shallow(<TestVars hookProps={_.merge(DEFAULT_PROPS, { initialValues })} />);
 
     expect(container.prop('values')).toBeDefined();
 
