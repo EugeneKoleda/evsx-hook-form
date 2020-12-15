@@ -1,21 +1,6 @@
 import React, { useState } from 'react';
 
-type ValueType = string | number | boolean | [] | null; 
-
-type ValuesType = {
-    [key: string]: ValueType;
-};
-
-interface IFieldProps {
-    name: string;
-    type: string;
-    id?: string;
-    className?: string;
-};
-
-interface IUseFieldProps extends IFieldProps {
-    component?: React.ElementType;
-}
+import { ValueType, ValuesType, IUseFieldProps, IForm } from '../types';
 
 interface IInternalProps extends IUseFieldProps {
     checked?: ValueType;
@@ -26,14 +11,6 @@ interface IInternalProps extends IUseFieldProps {
 interface IProps {
     onSubmit: (values: ValuesType) => void;
     initialValues: ValuesType;
-};
-
-interface IForm {
-    values: null | ValuesType;
-    onSubmit: (e: React.SyntheticEvent<HTMLFormElement>) => void;
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    setFieldValue: (name: string, value: ValueType) => void;
-    useField: (fieldProps: IFieldProps) => ((props: any) => JSX.Element) | void;
 };
 
 let useForm = (props: IProps) => {
