@@ -6,7 +6,6 @@ declare type ValuesType = {
 interface IFieldProps {
     name: string;
     type: string;
-    Component?: () => JSX.Element;
     id?: string;
     className?: string;
 }
@@ -19,7 +18,7 @@ interface IForm {
     onSubmit: (e: React.SyntheticEvent<HTMLFormElement>) => void;
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     setFieldValue: (name: string, value: ValueType) => void;
-    useField: (fieldProps: IFieldProps) => JSX.Element | ((props: any) => JSX.Element) | void;
+    useField: (fieldProps: IFieldProps) => ((props: any) => JSX.Element) | void;
 }
 declare let useForm: (props: IProps) => IForm;
 export default useForm;
