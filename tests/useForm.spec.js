@@ -1,8 +1,9 @@
 import React from 'react';
-import _ from 'lodash';
+import _, { before } from 'lodash';
 import { mount } from 'enzyme';
+import * as Yup from 'yup';
 
-import { TestComponent, TestVars } from './seeds/useForm.seed';
+import { TestComponent, TestProps } from './seeds/useForm.seed';
 
 const DEFAULT_PROPS = {
     initialValues: { name: 'Test', age: 20, isAgree: true },
@@ -12,7 +13,7 @@ const DEFAULT_PROPS = {
 
 describe('Test useForm props', () => {
     it('Test useForm props correct', () => {
-        let testWrapper = mount(<TestComponent hookProps={DEFAULT_PROPS} />);
+        let testWrapper = mount(<TestProps hookProps={DEFAULT_PROPS} />);
 
         expect(testWrapper.props().hookProps.initialValues).toBeDefined();
         expect(testWrapper.props().hookProps.initialValues).toHaveProperty('name', 'Test');
@@ -26,47 +27,48 @@ describe('Test useForm props', () => {
     it('Test useForm props empty', () => {
         let props = {
             ...DEFAULT_PROPS,
-            initialValues: undefined
+            initialValues: {}
         };
 
-        let testWrapper = mount(<TestComponent hookProps={props} />);
+        let testWrapper = mount(<TestProps hookProps={props} />);
 
-        expect(testWrapper.props().hookProps.initialValues).toBeUndefined();
+        expect(testWrapper.props().hookProps.initialValues).toBeDefined();
+        expect(testWrapper.props().hookProps.initialValues).not.toHaveProperty('name', 'Test');
     });
 });
 
 describe('Test useForm', () => {
+    let container = shallow(<TestComponent  hookProps={DEFAULT_PROPS}/>);
+    let hookResContainer = container.props().children[0].props;
+
     it('Check useForm result', () => {        
-        let container = shallow(<TestVars  hookProps={DEFAULT_PROPS}/>);
+        expect(hookResContainer.values).toBeDefined();
+        expect(hookResContainer.values).toHaveProperty('name', 'Test');
+        expect(hookResContainer.values).toHaveProperty('age', 20);
+        expect(hookResContainer.values).toHaveProperty('isAgree', true);
 
-        expect(container.prop('values')).toBeDefined();
-        expect(container.prop('values')).toHaveProperty('name', 'Test');
-        expect(container.prop('values')).toHaveProperty('age', 20);
-        expect(container.prop('values')).toHaveProperty('isAgree', true);
+        expect(hookResContainer.onSubmit).toBeDefined();
+        expect(hookResContainer.onSubmit).toEqual(expect.any(Function));
 
-        expect(container.prop('onSubmit')).toBeDefined();
-        expect(container.prop('onSubmit')).toEqual(expect.any(Function));
+        expect(hookResContainer.onChange).toBeDefined();
+        expect(hookResContainer.onChange).toEqual(expect.any(Function));
 
-        expect(container.prop('onChange')).toBeDefined();
-        expect(container.prop('onChange')).toEqual(expect.any(Function));
+        expect(hookResContainer.useField).toBeDefined();
+        expect(hookResContainer.useField).toEqual(expect.any(Function));
 
-        expect(container.prop('useField')).toBeDefined();
-        expect(container.prop('useField')).toEqual(expect.any(Function));
-
-        expect(container.prop('setFieldValue')).toBeDefined();
-        expect(container.prop('setFieldValue')).toEqual(expect.any(Function));
+        expect(hookResContainer.setFieldValue).toBeDefined();
+        expect(hookResContainer.setFieldValue).toEqual(expect.any(Function));
     });
 
     it('Check useForm methods', () => {
-        let container = shallow(<TestVars hookProps={DEFAULT_PROPS} />);
+        hookResContainer.setFieldValue('name', 'TestName');
 
-        container.prop('setFieldValue')('name', 'TestName');
-        expect(container.prop('values')).toHaveProperty('name', 'TestName');
+        hookResContainer = container.props().children[0].props; // should update for getting fresh values
+
+        expect(hookResContainer.values).toHaveProperty('name', 'TestName');
     });
 
     it('Check events', () => {
-        let container = mount(<TestComponent hookProps={DEFAULT_PROPS} />);
-
         let form = container.find('form');
         form.simulate('submit');
 
@@ -103,13 +105,15 @@ describe('Check useField', () => {
         city: 'TestCity',
     };
 
-    let container = shallow(<TestVars hookProps={_.merge(DEFAULT_PROPS, { initialValues })} />);
+    let container = shallow(<TestComponent hookProps={_.merge(DEFAULT_PROPS, { initialValues })} />);
+    let hookResContainer = container.props().children[0].props;
 
-    expect(container.prop('values')).toBeDefined();
+    expect(hookResContainer.values).toBeDefined();
 
     it('Check correct useField with text input', () => {
-        let TextField = container.prop('useField')({ type: 'text', name: 'lastName' });
+        let TextField = hookResContainer.useField({ type: 'text', name: 'lastName' });
         let containerField = mount(<TextField />);
+
         containerField.find('input[name="lastName"]').simulate('change', {
             target: {
                 value: 'TestLastName',
@@ -117,12 +121,15 @@ describe('Check useField', () => {
             }
         });
 
-        expect(container.prop('values')).toHaveProperty('lastName', 'TestLastName');
+        hookResContainer = container.props().children[0].props; // should update for getting fresh values
+
+        expect(hookResContainer.values).toHaveProperty('lastName', 'TestLastName');
     });
 
     it('Check correct useField with checkbox input', () => {
-        let CheckboxField = container.prop('useField')({ type: 'checkbox', name: 'isSubscribed' });
+        let CheckboxField = hookResContainer.useField({ type: 'checkbox', name: 'isSubscribed' });
         let containerField = mount(<CheckboxField />);
+
         containerField.find('input[name="isSubscribed"]').simulate('change', {
             target: {
                 value: false,
@@ -130,14 +137,17 @@ describe('Check useField', () => {
             }
         });
 
-        expect(container.prop('values')).toHaveProperty('isSubscribed', false);
+        hookResContainer = container.props().children[0].props; // should update for getting fresh values
+
+        expect(hookResContainer.values).toHaveProperty('isSubscribed', false);
     });
 
     it('Check correct useField with custom component', () => {
         let CustomInput = (props) => <input {...props} />;
 
-        let CustomInputField = container.prop('useField')({ type: 'text', name: 'city', component: CustomInput });
+        let CustomInputField = hookResContainer.useField({ type: 'text', name: 'city', component: CustomInput });
         let containerField = mount(<CustomInputField />);
+
         containerField.find('input[name="city"]').simulate('change', {
             target: {
                 value: 'TestCityName',
@@ -145,6 +155,63 @@ describe('Check useField', () => {
             }
         });
 
-        expect(container.prop('values')).toHaveProperty('city', 'TestCityName');
+        hookResContainer = container.props().children[0].props; // should update for getting fresh values
+
+        expect(hookResContainer.values).toHaveProperty('city', 'TestCityName');
     });
 }); 
+
+describe('Check validation', () => {
+    const SCHEMA = Yup.object().shape({
+        name: Yup.string().required('Required!').min(4, 'Length is too slow').max(20, 'Length is too match'),
+    });
+
+    let container = shallow(<TestComponent hookProps={{ ...DEFAULT_PROPS, validationSchema: SCHEMA }} />);
+    let hookResContainer = container.props().children[0].props;
+
+    let NameField = hookResContainer.useField({ type: 'text', name: 'name' });
+    let nameContainer = mount(<NameField />);
+
+    beforeEach(() => nameContainer.find('input[name="name"]').simulate('change', {
+        target: {
+            value: '',
+            name: 'name',
+        }
+    }));
+
+    it('check correct name', () => {
+        nameContainer.find('input[name="name"]').simulate('change', {
+            target: {
+                value: 'TestName',
+                name: 'name',
+            }
+        });
+
+        hookResContainer = container.props().children[0].props; // should update for getting fresh values
+
+        expect(hookResContainer.values).toHaveProperty('name', 'TestName');
+        expect(hookResContainer.errors.name).toEqual('');
+    });
+
+    it('check invalid name', () => {
+        nameContainer.find('input[name="name"]').simulate('change', {
+            target: {
+                value: 'Te',
+                name: 'name',
+            }
+        });
+
+        hookResContainer = container.props().children[0].props; // should update for getting fresh values
+
+        expect(hookResContainer.values).toHaveProperty('name', 'Te');
+        expect(hookResContainer.errors.name).toEqual('Length is too slow');
+    });
+
+    it('check onSubmit with empty values', () => {
+        container.find('form').simulate('submit');
+
+        hookResContainer = container.props().children[0].props; // should update for getting fresh errors
+
+        expect(hookResContainer.errors.name).toEqual('Required!');
+    });
+});
